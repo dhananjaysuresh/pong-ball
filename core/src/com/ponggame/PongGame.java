@@ -1,33 +1,78 @@
 package com.ponggame;
 
-import com.badlogic.gdx.ApplicationAdapter;
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.Game;
+import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.ponggame.accessors.CameraAccessor;
+import com.ponggame.accessors.PaddleAccessor;
+import com.ponggame.accessors.TableAccessor;
+import com.ponggame.objects.Paddle;
+import com.ponggame.screens.LoadingScreen;
+import com.ponggame.screens.PongBoard;
 
-public class PongGame extends ApplicationAdapter {
-	SpriteBatch batch;
-	Texture img;
-	
-	@Override
-	public void create () {
-		batch = new SpriteBatch();
-		img = new Texture("badlogic.jpg");
-	}
+import aurelienribon.tweenengine.Tween;
+import aurelienribon.tweenengine.TweenManager;
 
-	@Override
-	public void render () {
-		Gdx.gl.glClearColor(1, 0, 0, 1);
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-		batch.begin();
-		batch.draw(img, 0, 0);
-		batch.end();
-	}
-	
-	@Override
-	public void dispose () {
-		batch.dispose();
-		img.dispose();
-	}
+public class PongGame extends Game {
+
+    //==============================================================================================
+    // Class Properties
+    //==============================================================================================
+
+    public static final int WIDTH = 800, HEIGHT = 480;
+    public SpriteBatch batch;
+    public Screen mainMenu;
+    public PongBoard pongBoard;
+    public boolean musicOn = true;
+    public String winningPlayer = "Player 1";
+    public int player1Score = 0;
+    public int player2Score = 0;
+    public Music musicToPlay;
+    public boolean musicCurrentlyPlaying = false;
+    public TweenManager tweenManager;
+    public AssetManager assetManager;
+    public Label.LabelStyle titleStyle;
+    public Texture ballImage;
+    public Texture smallParticleImage;
+    public Texture mediumParticleImage;
+    public Texture largeParticleImage;
+    public Texture netImage;
+    public BitmapFont scoreFont;
+
+    //==============================================================================================
+    // Class Instance Methods
+    //==============================================================================================
+
+    @Override
+    public void create() {
+        setupTweenManager();
+        assetManager = new AssetManager();
+
+        batch = new SpriteBatch();
+        this.setScreen(new LoadingScreen(this));
+    }
+
+    @Override
+    public void render() {
+        super.render();
+    }
+
+    @Override
+    public void dispose() {
+        batch.dispose();
+    }
+
+    private void setupTweenManager() {
+        tweenManager = new TweenManager();
+        Tween.registerAccessor(Camera.class, new CameraAccessor());
+        Tween.registerAccessor(Table.class, new TableAccessor());
+        Tween.registerAccessor(Paddle.class, new PaddleAccessor());
+    }
 }
