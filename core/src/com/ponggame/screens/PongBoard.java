@@ -19,6 +19,7 @@ import com.ponggame.PongGame;
 import com.ponggame.accessors.CameraAccessor;
 import com.ponggame.accessors.PaddleAccessor;
 import com.ponggame.objects.Ball;
+import com.ponggame.objects.Brick;
 import com.ponggame.objects.Paddle;
 import com.ponggame.objects.ParticleEmitter;
 
@@ -43,14 +44,18 @@ public class PongBoard implements Screen {
     private final int WIDTH = PongGame.WIDTH;
     Paddle paddle1;
     Paddle paddle2;
+    Brick brick1;
+    Brick brick2;
     private Ball ball;
     private OrthographicCamera camera;
     private Array<Paddle> paddleList;
+    private Array<Brick> brickList;
     private Array<Rectangle> net;
     private Texture netTexture;
     private int player1Score;
     private int player2Score;
     private Sound paddleCollisionSound;
+    private Sound brickCollisionSound;
     private ParticleEmitter particleEmitter;
     private int paddleHits;
     private boolean allowScreenShake;
@@ -61,7 +66,9 @@ public class PongBoard implements Screen {
         scoreFont = game.scoreFont;
 
         paddleCollisionSound = game.assetManager.get("ping.wav", Sound.class);
+        brickCollisionSound = game.assetManager.get("ping.wav", Sound.class);
         setupPaddles();
+        setupBricks();
         setupNet();
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 800, 480);
@@ -163,6 +170,15 @@ public class PongBoard implements Screen {
         paddleList.add(paddle2);
     }
 
+    public void setupBricks() {
+        //TODO add levels and randomize them
+        brick1 = new Brick("brick1", 400, 300);
+        brick2 = new Brick("brick2", 400, 100);
+        brickList = new Array<Brick>();
+        brickList.add(brick1);
+        brickList.add(brick2);
+    }
+
     public void setupNet() {
         net = new Array<Rectangle>();
 
@@ -204,6 +220,7 @@ public class PongBoard implements Screen {
         if (!(ball == null)) {
             ball.moveX(deltaTime);
             checkForPaddleCollision();
+            checkForBrickCollision();
             checkForBallOutOfBounds();
             ball.moveY(deltaTime);
             checkForWallCollision();
@@ -228,6 +245,26 @@ public class PongBoard implements Screen {
                 } else if (hitPaddle.name.equals("paddle2")) {
                     ball.setPosition((hitPaddle.x - ball.width), ball.y);
                 }
+            }
+        }
+    }
+
+    private void checkForBrickCollision() {
+        for (Brick hitBrick : brickList) {
+            if (Intersector.overlaps(hitBrick, ball)) {
+                //paddleHits++; // We may want to add different type of scores
+                ball.xVel *= -1;
+                if (ball.xVel > 0) {
+                    ball.xVel += 20;
+                } else {
+                    ball.xVel -= 20;
+                }
+
+                brickCollisionSound.play();
+                startScreenShake();
+
+                // Move away brick off the screen
+                hitBrick.setY(500);
             }
         }
     }
@@ -269,6 +306,7 @@ public class PongBoard implements Screen {
             ball.resetVelocityX(1);
             player2Score++;
             enterNormalState();
+            redrawBricks();
         } else if (ball.getRight() > WIDTH) {
             ball.resetPosition();
             ball.reverseDirectionX();
@@ -276,6 +314,13 @@ public class PongBoard implements Screen {
             ball.resetVelocityX(-1);
             player1Score++;
             enterNormalState();
+            redrawBricks();
+        }
+    }
+
+    private void redrawBricks() {
+        for (Brick brick:brickList) {
+            brick.setOriginalY();
         }
     }
 
@@ -333,6 +378,11 @@ public class PongBoard implements Screen {
         game.batch.begin();
         game.batch.draw(paddle1.paddleImage, paddle1.x, paddle1.y);
         game.batch.draw(paddle2.paddleImage, paddle2.x, paddle2.y);
+        for (Brick brick:brickList) {
+            game.batch.draw(brick.brickImage, brick.x, brick.y);
+        }
+//        game.batch.draw(brick1.brickImage, brick1.x, brick1.y);
+//        game.batch.draw(brick2.brickImage, brick2.x, brick2.y);
         for (Rectangle netPiece : net) {
             game.batch.draw(netTexture, netPiece.getX(), netPiece.getY());
         }
